@@ -1,0 +1,47 @@
+# Production stack used by the CD workflow on the server.
+# The server keeps a `.env` file next to this file (see .env.example).
+# DB_URI must point at the `postgres` service, e.g.
+#   DB_URI=postgresql://postgres:<password>@postgres:5432/marketplace
+# REDIS_URL must point at the `redis` service, e.g.
+#   REDIS_URL=redis://redis:6379
+
+services:
+  app:
+    image: ${APP_IMAGE:-ghcr.io/muhammadnurergashev620-wq/marketplase:latest}
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-marketplace}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:

@@ -1,0 +1,17 @@
+node_modules
+dist
+generated
+coverage
+uploads
+.git
+.github
+.env
+.env.*
+!.env.example
+.agents
+.claude
+.windsurf
+*.log
+README.md
+Dockerfile
+docker-compose*.yml
